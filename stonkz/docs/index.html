@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #1c1c1e;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+        }
+        .table-dark {
+            background-color: #2c2c2e;
+        }
+        .table-dark th, .table-dark td {
+            color: #ffffff;
+        }
+        .alert-card {
+            background-color: #ffcc00;
+            border: none;
+            color: #000000;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .alert-card strong {
+            font-size: 1.2rem;
+        }
+        .container {
+            margin-top: 20px;
+        }
+        h1, h3 {
+            color: #ffcc00;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #3a3a3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Stock Tracker</h1>
+        <div class="row">
+            <!-- Stock Table -->
+            <div class="col-lg-8">
+                <table class="table table-dark table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Ticker</th>
+                            <th>Price</th>
+                            <th>Volume</th>
+                            <th>% Change</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-data"></tbody>
+                </table>
+            </div>
+
+            <!-- Parabolic Alerts -->
+            <div class="col-lg-4">
+                <h3>Parabolic Alerts</h3>
+                <div id="alerts"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        async function fetchStocks() {
+            try {
+                const response = await fetch('https://your-heroku-app-url/stocks');  // Update with your Heroku app URL
+                const data = await response.json();
+
+                // Update stock table
+                updateStockTable(data.stocks);
+
+                // Update parabolic alerts
+                updateParabolicAlerts(data.parabolic_alerts);
+
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+            }
+        }
+
+        function updateStockTable(stocks) {
+            const stockTable = document.getElementById('stock-data');
+            stockTable.innerHTML = ''; // Clear existing data
+
+            stocks.forEach(stock => {
+                const rowColor = stock.change > 0 ? 'text-success' : 'text-danger';
+                stockTable.innerHTML += `
+                    <tr>
+                        <td>${stock.ticker}</td>
+                        <td>${stock.price}</td>
+                        <td>${Number(stock.volume).toLocaleString()}</td>
+                        <td class="${rowColor}">${stock.change}%</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateParabolicAlerts(alerts) {
+            const alertsDiv = document.getElementById('alerts');
+            alertsDiv.innerHTML = ''; // Clear existing alerts
+
+            if (alerts.length > 0) {
+                alerts.forEach(alert => {
+                    alertsDiv.innerHTML += `
+                        <div class="alert-card">
+                            <strong>${alert.ticker}</strong>: 
+                            Price ${alert.price}, Change ${alert.change}%, 
+                            Volume ${Number(alert.volume).toLocaleString()}
+                        </div>
+                    `;
+                });
+            } else {
+                alertsDiv.innerHTML = '<p>No parabolic movements detected.</p>';
+            }
+        }
+
+        // Fetch stocks data every 30 seconds
+        fetchStocks();
+        setInterval(fetchStocks, 30000); // Update every 30 seconds
+    </script>
+</body>
+</html>
